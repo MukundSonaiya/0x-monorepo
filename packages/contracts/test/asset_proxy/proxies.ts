@@ -284,7 +284,7 @@ describe('Asset Transfer Proxies', () => {
                     amount,
                     { from: exchangeAddress },
                 );
-
+                await web3Wrapper.awaitTransactionSuccessAsync(txHash, constants.AWAIT_TRANSACTION_MINED_MS);
                 // Parse transaction logs
                 const logDecoder = new LogDecoder(web3Wrapper, erc721Receiver.address);
                 const tx = await logDecoder.getTxWithDecodedLogsAsync(txHash);
@@ -316,6 +316,7 @@ describe('Asset Transfer Proxies', () => {
                     amount,
                     { from: exchangeAddress },
                 );
+                await web3Wrapper.awaitTransactionSuccessAsync(txHash, constants.AWAIT_TRANSACTION_MINED_MS);
                 // Parse transaction logs
                 const logDecoder = new LogDecoder(web3Wrapper, erc721Receiver.address);
                 const tx = await logDecoder.getTxWithDecodedLogsAsync(txHash);
