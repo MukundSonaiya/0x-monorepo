@@ -9,8 +9,28 @@ import * as _ from 'lodash';
 
 import { assert } from './assert';
 import { crypto } from './crypto';
+import { EIP712Utils } from './eip712_utils';
+import { EIP712Schema } from './types';
 
 const INVALID_TAKER_FORMAT = 'instance.takerAddress is not of a type(s) string';
+
+const EIP712_ORDER_SCHEMA: EIP712Schema = {
+    name: 'Order',
+    parameters: [
+        { name: 'makerAddress', type: 'address' },
+        { name: 'takerAddress', type: 'address' },
+        { name: 'feeRecipientAddress', type: 'address' },
+        { name: 'senderAddress', type: 'address' },
+        { name: 'makerAssetAmount', type: 'uint256' },
+        { name: 'takerAssetAmount', type: 'uint256' },
+        { name: 'makerFee', type: 'uint256' },
+        { name: 'takerFee', type: 'uint256' },
+        { name: 'expirationTimeSeconds', type: 'uint256' },
+        { name: 'salt', type: 'uint256' },
+        { name: 'makerAssetData', type: 'bytes' },
+        { name: 'takerAssetData', type: 'bytes' },
+    ],
+};
 
 export const orderHashUtils = {
     /**
@@ -59,10 +79,11 @@ export const orderHashUtils = {
         const takerAssetDataHash = crypto.solSHA3([ethUtil.toBuffer(order.takerAssetData)]);
 
         const orderParamsHashBuff = crypto.solSHA3([
-            order.makerAddress,
-            order.takerAddress,
-            order.feeRecipientAddress,
-            order.senderAddress,
+            orderHashUtils._getOrderSchemaBuffer(),
+            EIP712Utils.pad32Address(order.makerAddress),
+            EIP712Utils.pad32Address(order.takerAddress),
+            EIP712Utils.pad32Address(order.feeRecipientAddress),
+            EIP712Utils.pad32Address(order.senderAddress),
             order.makerAssetAmount,
             order.takerAssetAmount,
             order.makerFee,
@@ -73,34 +94,11 @@ export const orderHashUtils = {
             takerAssetDataHash,
         ]);
         const orderParamsHashHex = `0x${orderParamsHashBuff.toString('hex')}`;
-        const orderSchemaHashHex = this._getOrderSchemaHex();
-        const domainSeparatorHashHex = this._getDomainSeparatorHashHex(order.exchangeAddress);
-        const domainSeparatorSchemaHex = this._getDomainSeparatorSchemaHex();
-        const orderHashBuff = crypto.solSHA3([
-            new BigNumber(domainSeparatorSchemaHex),
-            new BigNumber(domainSeparatorHashHex),
-            new BigNumber(orderSchemaHashHex),
-            new BigNumber(orderParamsHashHex),
-        ]);
+        const orderHashBuff = EIP712Utils.createEIP712Message(orderParamsHashHex, order.exchangeAddress);
         return orderHashBuff;
     },
     _getOrderSchemaHex(): string {
-        const orderSchemaHashBuff = crypto.solSHA3([
-            'Order(',
-            'address makerAddress,',
-            'address takerAddress,',
-            'address feeRecipientAddress,',
-            'address senderAddress,',
-            'uint256 makerAssetAmount,',
-            'uint256 takerAssetAmount,',
-            'uint256 makerFee,',
-            'uint256 takerFee,',
-            'uint256 expirationTimeSeconds,',
-            'uint256 salt,',
-            'bytes makerAssetData,',
-            'bytes takerAssetData,',
-            ')',
-        ]);
+        const orderSchemaHashBuff = EIP712Utils.compileSchema(EIP712_ORDER_SCHEMA);
         const schemaHashHex = `0x${orderSchemaHashBuff.toString('hex')}`;
         return schemaHashHex;
     },
@@ -113,5 +111,8 @@ export const orderHashUtils = {
         const domainSeparatorHashBuff = crypto.solSHA3([exchangeAddress]);
         const domainSeparatorHashHex = `0x${domainSeparatorHashBuff.toString('hex')}`;
         return domainSeparatorHashHex;
+    },
+    _getOrderSchemaBuffer(): Buffer {
+        return EIP712Utils.compileSchema(EIP712_ORDER_SCHEMA);
     },
 };

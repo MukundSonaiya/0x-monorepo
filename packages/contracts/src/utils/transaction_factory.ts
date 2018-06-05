@@ -1,14 +1,11 @@
-import { crypto, generatePseudoRandomSalt } from '@0xproject/order-utils';
+import { crypto, EIP712Utils, generatePseudoRandomSalt } from '@0xproject/order-utils';
 import { SignatureType } from '@0xproject/types';
 import { BigNumber } from '@0xproject/utils';
 import * as ethUtil from 'ethereumjs-util';
 import * as _ from 'lodash';
 
-import { crypto } from './crypto';
-import { EIP712Utils } from './eip712_utils';
-import { orderUtils } from './order_utils';
 import { signingUtils } from './signing_utils';
-import { EIP712Schema, SignatureType, SignedTransaction } from './types';
+import { EIP712Schema, SignedTransaction } from './types';
 
 const EIP712_EXECUTE_TRANSACTION_SCHEMA: EIP712Schema = {
     name: 'ExecuteTransaction',

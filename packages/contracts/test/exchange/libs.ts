@@ -58,8 +58,7 @@ describe('Exchange libs', () => {
         describe('getOrderSchema', () => {
             it('should output the correct order schema hash', async () => {
                 const orderSchema = await libs.getOrderSchemaHash.callAsync();
-                const orderSchemaBuffer = orderHashUtils._getOrderSchemaHex();
-                const schemaHashHex = `0x${orderSchemaBuffer.toString('hex')}`;
+                const schemaHashHex = orderHashUtils._getOrderSchemaHex();
                 expect(schemaHashHex).to.be.equal(orderSchema);
             });
         });
